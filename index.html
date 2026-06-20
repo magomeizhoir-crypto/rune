@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Bermuda MAFIA - Auto Eye</title>
+  <title>Bermuda MAFIA - Auto Eye 2H Firefox</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -15,13 +15,13 @@
       object-fit: cover; transform: scaleX(-1); opacity: 0.25; z-index: 1;
     }
     #canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; }
-  .hud {
+   .hud {
       position: fixed; top: 20px; left: 20px; right: 20px; z-index: 10;
       color: #00ff88; font-size: 12px; line-height: 2; letter-spacing: 2px;
       text-shadow: 0 0 25px #00ff88; pointer-events: none;
       font-weight: 900; text-align: center;
     }
-  .signature {
+   .signature {
       position: fixed; bottom: 20px; right: 20px; z-index: 10;
       color: #ff6a00; font-size: 10px; letter-spacing: 3px;
       text-shadow: 0 0 20px #ff6a00; pointer-events: none; font-weight: bold;
@@ -64,9 +64,9 @@
     class RealEyeOfAgamotto {
       constructor(x, y, hand) {
         this.x = x; this.y = y; this.hand = hand;
-        this.radius = 0; this.maxRadius = 85;
+        this.radius = 0; this.maxRadius = 70;
         this.rotation = 0; this.innerRotation = 0; this.pulse = 0;
-        this.state = 'summon'; this.expansionSpeed = 1.5;
+        this.state = 'summon'; this.expansionSpeed = 2.5;
         this.opened = false; this.autoUnleashTriggered = false;
       }
       update(x, y) {
@@ -79,7 +79,7 @@
             this.autoUnleashTriggered = true;
             playShieldSound();
             navigator.vibrate && navigator.vibrate([40, 30, 40]);
-            hud.textContent = 'TIME STONE UNLEASHED';
+            hud.textContent = 'DUAL STONES UNLEASHED';
           }
         }
         this.rotation += 0.02; this.innerRotation -= 0.04; this.pulse += 0.1;
@@ -147,10 +147,10 @@
         const r = this.radius + pulseSize;
 
         ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 5; ctx.stroke();
+        ctx.strokeStyle = '#ff6b00'; ctx.lineWidth = 5; ctx.stroke();
 
         ctx.beginPath(); ctx.arc(0, 0, r * 0.92, 0, Math.PI * 2);
-        ctx.strokeStyle = '#ff4500'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = '#ff9a00'; ctx.lineWidth = 2; ctx.stroke();
 
         ctx.save(); ctx.rotate(this.rotation);
         for (let i = 0; i < 6; i++) {
@@ -158,12 +158,12 @@
           const x1 = Math.cos(angle) * r * 0.7, y1 = Math.sin(angle) * r * 0.7;
           const x2 = Math.cos(angle + Math.PI * 2 / 3) * r * 0.7, y2 = Math.sin(angle + Math.PI * 2 / 3) * r * 0.7;
           ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-          ctx.strokeStyle = 'rgba(255,0,0,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.strokeStyle = 'rgba(255,107,0,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
         }
         ctx.restore();
 
         ctx.beginPath(); ctx.arc(0, 0, r * 0.2, 0, Math.PI * 2);
-        ctx.fillStyle = '#ff0000'; ctx.fill();
+        ctx.fillStyle = '#ff6b00'; ctx.fill();
         ctx.restore();
       }
     }
@@ -187,32 +187,40 @@
     }
 
     async function createHandLandmarker() {
-      const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
-      );
-      handLandmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
-          delegate: 'GPU'
-        },
-        runningMode: 'VIDEO',
-        numHands: 2
-      });
+      try {
+        hud.textContent = 'LOADING WASM...';
+        const vision = await FilesetResolver.forVisionTasks(
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm'
+        );
+
+        hud.textContent = 'LOADING MODEL CPU...';
+        handLandmarker = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+            delegate: 'CPU'
+          },
+          runningMode: 'VIDEO',
+          numHands: 2
+        });
+        hud.textContent = 'MODEL READY - 2 HANDS';
+      } catch (e) {
+        hud.textContent = 'MODEL FAILED: ' + e.name;
+        console.error(e);
+      }
     }
 
     async function init() {
       try {
-        hud.textContent = 'LOADING AI MODEL...';
         await createHandLandmarker();
 
         hud.textContent = 'REQUESTING CAMERA...';
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+          video: { facingMode: 'user', width: { ideal: 240 }, height: { ideal: 320 } }
         });
         video.srcObject = stream;
         await video.play();
 
-        hud.textContent = 'SHOW HAND = AUTO POWER UP';
+        hud.textContent = 'SHOW BOTH HANDS';
         predictWebcam();
       } catch (err) {
         hud.textContent = 'ERROR: ' + err.name;
@@ -225,7 +233,7 @@
         lastVideoTime = video.currentTime;
         const results = handLandmarker.detectForVideo(video, performance.now());
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const activeEyes = new Set();
@@ -253,7 +261,7 @@
                 landmarks[5].x - landmarks[17].x,
                 landmarks[5].y - landmarks[17].y
               ) * canvas.width;
-              const shieldRadius = handSize * 2.2;
+              const shieldRadius = handSize * 2.5;
 
               let shield = shields.find(s => s.hand === handedness);
               if (!shield) {
@@ -263,12 +271,12 @@
                 shield.update(palmX, palmY, shieldRadius);
               }
 
-              if (Math.random() > 0.5) {
-                for (let j = 0; j < 6; j++) {
+              if (Math.random() > 0.8) {
+                for (let j = 0; j < 2; j++) {
                   sparks.push(new Spark(
                     palmX + (Math.random() - 0.5) * shieldRadius,
                     palmY + (Math.random() - 0.5) * shieldRadius,
-                    '#ff0000'
+                    '#ff6b00'
                   ));
                 }
               }
@@ -288,7 +296,7 @@
         }
 
         if (eyes.length === 0 && shields.length === 0) {
-          hud.textContent = 'SHOW HAND = AUTO POWER UP';
+          hud.textContent = 'SHOW BOTH HANDS';
         }
       }
       requestAnimationFrame(predictWebcam);
