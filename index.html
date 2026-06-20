@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Bermuda MAFIA - Auto Expand Red</title>
+  <title>Bermuda MAFIA - Pure Line Style</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -23,8 +23,8 @@
     }
 .signature {
       position: fixed; bottom: 20px; right: 20px; z-index: 10;
-      color: #ff0000; font-size: 10px; letter-spacing: 3px;
-      text-shadow: 0 0 20px #ff0000; pointer-events: none; font-weight: bold;
+      color: #ff3d00; font-size: 10px; letter-spacing: 3px;
+      text-shadow: 0 0 20px #ff3d00; pointer-events: none; font-weight: bold;
     }
   </style>
 </head>
@@ -64,21 +64,21 @@
     class LineEyeOfAgamotto {
       constructor(x, y, hand) {
         this.x = x; this.y = y; this.hand = hand;
-        this.radius = 0; this.maxRadius = 90; // BIGGER
+        this.radius = 0; this.maxRadius = 90;
         this.rotation = 0; this.innerRotation = 0;
-        this.state = 'summon'; this.expansionSpeed = 3; // FASTER EXPAND
+        this.state = 'summon'; this.expansionSpeed = 3;
         this.opened = false; this.autoUnleashTriggered = false;
-        this.color = '#ff3d00'; // Starts orange
+        this.color = '#ff3d00';
       }
       update(x, y) {
         this.x = x; this.y = y;
         if (this.state === 'summon' &&!this.autoUnleashTriggered) {
           if (this.radius < this.maxRadius) {
-            this.radius += this.expansionSpeed; // AUTO EXPAND
+            this.radius += this.expansionSpeed;
           } else {
             this.state = 'unleash'; this.opened = true;
             this.autoUnleashTriggered = true;
-            this.color = '#ff0000'; // TURNS RED
+            this.color = '#ff3d00';
             playShieldSound();
             navigator.vibrate && navigator.vibrate([40, 30, 40]);
             hud.textContent = 'TIME STONE UNLEASHED';
@@ -89,7 +89,7 @@
       draw() {
         ctx.save(); ctx.translate(this.x, this.y);
         const r = this.radius;
-        const lineColor = this.color; // TURNS RED WHEN OPENED
+        const lineColor = this.color;
 
         ctx.save(); ctx.rotate(this.rotation);
         ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
@@ -116,12 +116,14 @@
         }
         ctx.restore();
 
+        // Eye lids - LINE ONLY, NO FILL
         const lidOpen = this.opened? 0 : r * 0.4;
         ctx.beginPath(); ctx.ellipse(0, -lidOpen, r * 0.6, r * 0.35, 0, 0, Math.PI);
         ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
         ctx.beginPath(); ctx.ellipse(0, lidOpen, r * 0.6, r * 0.35, 0, Math.PI, Math.PI * 2);
         ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
 
+        // Center - LINE ONLY, NO FILL
         ctx.beginPath(); ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2);
         ctx.strokeStyle = lineColor; ctx.lineWidth = 2; ctx.stroke();
         ctx.restore();
@@ -133,14 +135,14 @@
         this.x = x; this.y = y;
         this.radius = radius; this.targetRadius = radius;
         this.rotation = 0; this.hand = hand;
-        this.color = '#ff6b00'; // Starts orange
+        this.color = '#ff3d00';
       }
       update(x, y, radius) {
         this.x = x; this.y = y; this.targetRadius = radius;
         if (this.radius < this.targetRadius) this.radius += 15;
         if (this.radius > this.targetRadius) this.radius -= 15;
         this.rotation += 0.04;
-        this.color = '#ff0000'; // TURNS RED WHEN ACTIVE
+        this.color = '#ff3d00';
       }
       draw() {
         ctx.save(); ctx.translate(this.x, this.y);
@@ -183,8 +185,9 @@
       }
       draw() {
         ctx.globalAlpha = this.life;
-        ctx.fillStyle = this.color;
-        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = this.color; // LINE ONLY
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.stroke(); // STROKE NOT FILL
         ctx.globalAlpha = 1;
       }
     }
@@ -236,8 +239,7 @@
         lastVideoTime = video.currentTime;
         const results = handLandmarker.detectForVideo(video, performance.now());
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear instead of black fill
 
         const activeEyes = new Set();
         const activeShields = new Set();
@@ -264,7 +266,7 @@
                 landmarks[5].x - landmarks[17].x,
                 landmarks[5].y - landmarks[17].y
               ) * canvas.width;
-              const shieldRadius = handSize * 2.8; // BIGGER
+              const shieldRadius = handSize * 2.8;
 
               let shield = shields.find(s => s.hand === handedness);
               if (!shield) {
@@ -279,7 +281,7 @@
                   sparks.push(new Spark(
                     palmX + (Math.random() - 0.5) * shieldRadius,
                     palmY + (Math.random() - 0.5) * shieldRadius,
-                    '#ff0000' // RED SPARKS
+                    '#ff3d00'
                   ));
                 }
               }
