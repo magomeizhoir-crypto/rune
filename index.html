@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Bermuda MAFIA - Auto Eye 2H Firefox</title>
+  <title>Bermuda MAFIA - Auto Expand Red</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -15,16 +15,16 @@
       object-fit: cover; transform: scaleX(-1); opacity: 0.25; z-index: 1;
     }
     #canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 2; }
-   .hud {
+.hud {
       position: fixed; top: 20px; left: 20px; right: 20px; z-index: 10;
-      color: #00ff88; font-size: 12px; line-height: 2; letter-spacing: 2px;
-      text-shadow: 0 0 25px #00ff88; pointer-events: none;
+      color: #ff3d00; font-size: 12px; line-height: 2; letter-spacing: 2px;
+      text-shadow: 0 0 25px #ff3d00; pointer-events: none;
       font-weight: 900; text-align: center;
     }
-   .signature {
+.signature {
       position: fixed; bottom: 20px; right: 20px; z-index: 10;
-      color: #ff6a00; font-size: 10px; letter-spacing: 3px;
-      text-shadow: 0 0 20px #ff6a00; pointer-events: none; font-weight: bold;
+      color: #ff0000; font-size: 10px; letter-spacing: 3px;
+      text-shadow: 0 0 20px #ff0000; pointer-events: none; font-weight: bold;
     }
   </style>
 </head>
@@ -61,96 +61,97 @@
       osc.start(); osc.stop(audioCtx.currentTime + 0.15);
     }
 
-    class RealEyeOfAgamotto {
+    class LineEyeOfAgamotto {
       constructor(x, y, hand) {
         this.x = x; this.y = y; this.hand = hand;
-        this.radius = 0; this.maxRadius = 70;
-        this.rotation = 0; this.innerRotation = 0; this.pulse = 0;
-        this.state = 'summon'; this.expansionSpeed = 2.5;
+        this.radius = 0; this.maxRadius = 90; // BIGGER
+        this.rotation = 0; this.innerRotation = 0;
+        this.state = 'summon'; this.expansionSpeed = 3; // FASTER EXPAND
         this.opened = false; this.autoUnleashTriggered = false;
+        this.color = '#ff3d00'; // Starts orange
       }
       update(x, y) {
         this.x = x; this.y = y;
         if (this.state === 'summon' &&!this.autoUnleashTriggered) {
           if (this.radius < this.maxRadius) {
-            this.radius += this.expansionSpeed;
+            this.radius += this.expansionSpeed; // AUTO EXPAND
           } else {
             this.state = 'unleash'; this.opened = true;
             this.autoUnleashTriggered = true;
+            this.color = '#ff0000'; // TURNS RED
             playShieldSound();
             navigator.vibrate && navigator.vibrate([40, 30, 40]);
-            hud.textContent = 'DUAL STONES UNLEASHED';
+            hud.textContent = 'TIME STONE UNLEASHED';
           }
         }
-        this.rotation += 0.02; this.innerRotation -= 0.04; this.pulse += 0.1;
+        this.rotation += 0.02; this.innerRotation -= 0.04;
       }
       draw() {
         ctx.save(); ctx.translate(this.x, this.y);
-        const pulseSize = Math.sin(this.pulse) * 4;
-        const r = this.radius + pulseSize;
-        const stoneColor = this.opened? '#ff0000' : '#00ff88';
-        const runeColor = '#00ff88'; const runeAccent = '#00cc66';
+        const r = this.radius;
+        const lineColor = this.color; // TURNS RED WHEN OPENED
 
         ctx.save(); ctx.rotate(this.rotation);
         ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.strokeStyle = runeColor; ctx.lineWidth = 4; ctx.stroke();
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 3; ctx.stroke();
+
         for (let i = 0; i < 12; i++) {
           const angle = (Math.PI * 2 / 12) * i;
           const x1 = Math.cos(angle) * r * 0.94, y1 = Math.sin(angle) * r * 0.94;
           const x2 = Math.cos(angle) * r * 1.06, y2 = Math.sin(angle) * r * 1.06;
           ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-          ctx.strokeStyle = runeColor; ctx.lineWidth = 1; ctx.stroke();
+          ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
         }
         ctx.restore();
 
         ctx.save(); ctx.rotate(this.innerRotation);
         ctx.beginPath(); ctx.arc(0, 0, r * 0.75, 0, Math.PI * 2);
-        ctx.strokeStyle = runeAccent; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 2; ctx.stroke();
         for (let i = 0; i < 8; i++) {
           const angle = (Math.PI * 2 / 8) * i;
           ctx.save(); ctx.rotate(angle);
           ctx.beginPath(); ctx.moveTo(r * 0.5, 0); ctx.lineTo(r * 0.7, 0);
-          ctx.strokeStyle = runeColor; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
           ctx.restore();
         }
         ctx.restore();
 
         const lidOpen = this.opened? 0 : r * 0.4;
         ctx.beginPath(); ctx.ellipse(0, -lidOpen, r * 0.6, r * 0.35, 0, 0, Math.PI);
-        ctx.fillStyle = '#006644'; ctx.fill();
-        ctx.strokeStyle = runeColor; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
         ctx.beginPath(); ctx.ellipse(0, lidOpen, r * 0.6, r * 0.35, 0, Math.PI, Math.PI * 2);
-        ctx.fillStyle = '#006644'; ctx.fill();
-        ctx.strokeStyle = runeColor; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
 
         ctx.beginPath(); ctx.arc(0, 0, r * 0.35, 0, Math.PI * 2);
-        ctx.fillStyle = stoneColor; ctx.fill();
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 2; ctx.stroke();
         ctx.restore();
       }
     }
 
-    class StrangeShield {
+    class LineStrangeShield {
       constructor(x, y, hand, radius) {
         this.x = x; this.y = y;
         this.radius = radius; this.targetRadius = radius;
-        this.rotation = 0; this.hand = hand; this.pulse = 0;
+        this.rotation = 0; this.hand = hand;
+        this.color = '#ff6b00'; // Starts orange
       }
       update(x, y, radius) {
         this.x = x; this.y = y; this.targetRadius = radius;
         if (this.radius < this.targetRadius) this.radius += 15;
         if (this.radius > this.targetRadius) this.radius -= 15;
-        this.rotation += 0.04; this.pulse += 0.15;
+        this.rotation += 0.04;
+        this.color = '#ff0000'; // TURNS RED WHEN ACTIVE
       }
       draw() {
         ctx.save(); ctx.translate(this.x, this.y);
-        const pulseSize = Math.sin(this.pulse) * 6;
-        const r = this.radius + pulseSize;
+        const r = this.radius;
+        const lineColor = this.color;
 
         ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.strokeStyle = '#ff6b00'; ctx.lineWidth = 5; ctx.stroke();
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 4; ctx.stroke();
 
-        ctx.beginPath(); ctx.arc(0, 0, r * 0.92, 0, Math.PI * 2);
-        ctx.strokeStyle = '#ff9a00'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, r * 0.9, 0, Math.PI * 2);
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 2; ctx.stroke();
 
         ctx.save(); ctx.rotate(this.rotation);
         for (let i = 0; i < 6; i++) {
@@ -158,12 +159,14 @@
           const x1 = Math.cos(angle) * r * 0.7, y1 = Math.sin(angle) * r * 0.7;
           const x2 = Math.cos(angle + Math.PI * 2 / 3) * r * 0.7, y2 = Math.sin(angle + Math.PI * 2 / 3) * r * 0.7;
           ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-          ctx.strokeStyle = 'rgba(255,107,0,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(x1, y1);
+          ctx.strokeStyle = lineColor; ctx.lineWidth = 1; ctx.stroke();
         }
         ctx.restore();
 
         ctx.beginPath(); ctx.arc(0, 0, r * 0.2, 0, Math.PI * 2);
-        ctx.fillStyle = '#ff6b00'; ctx.fill();
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 2; ctx.stroke();
         ctx.restore();
       }
     }
@@ -249,7 +252,7 @@
             activeEyes.add(handedness);
             let eye = eyes.find(e => e.hand === handedness);
             if (!eye) {
-              eye = new RealEyeOfAgamotto(palmX, palmY, handedness);
+              eye = new LineEyeOfAgamotto(palmX, palmY, handedness);
               eyes.push(eye);
             } else {
               eye.update(palmX, palmY);
@@ -261,11 +264,11 @@
                 landmarks[5].x - landmarks[17].x,
                 landmarks[5].y - landmarks[17].y
               ) * canvas.width;
-              const shieldRadius = handSize * 2.5;
+              const shieldRadius = handSize * 2.8; // BIGGER
 
               let shield = shields.find(s => s.hand === handedness);
               if (!shield) {
-                shield = new StrangeShield(palmX, palmY, handedness, shieldRadius);
+                shield = new LineStrangeShield(palmX, palmY, handedness, shieldRadius);
                 shields.push(shield);
               } else {
                 shield.update(palmX, palmY, shieldRadius);
@@ -276,7 +279,7 @@
                   sparks.push(new Spark(
                     palmX + (Math.random() - 0.5) * shieldRadius,
                     palmY + (Math.random() - 0.5) * shieldRadius,
-                    '#ff6b00'
+                    '#ff0000' // RED SPARKS
                   ));
                 }
               }
