@@ -2,12 +2,13 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Doctor Strange Portal</title>
+<title>OVERLOAD - RED STATE</title>
 <style>
-  body{margin:0;background:#000;overflow:hidden}
-  video{width:100vw;height:100vh;object-fit:cover;transform:scaleX(-1)}
+  body{margin:0;background:#000;overflow:hidden;font-family:monospace}
+  video{width:100vw;height:100vh;object-fit:cover;transform:scaleX(-1);filter:brightness(0.4)}
   svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none}
-  @keyframes spin{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .text{position:absolute;width:100%;text-align:center;font-size:10px;letter-spacing:2px}
+  #top{top:20px} #bottom{bottom:20px}
 </style>
 <script type="importmap">
 {"imports": {
@@ -18,14 +19,20 @@
 </head>
 <body>
 <video id="cam" autoplay playsinline></video>
+<div id="top" class="text">OVERLOAD - RED STATE</div>
+<div id="bottom" class="text">SIR MAGOMEIZHOIR</div>
 
-<!-- OUTER RING + INNER RUNES -->
-<svg id="portal" width="0" height="0" viewBox="0 0 200 200">
-  <!-- Outer circle -->
-  <circle id="ring" cx="100" cy="100" r="80" stroke-width="3" fill="none"/>
-  <!-- Inner geometry -->
-  <path id="rune" d="M100 20 L180 100 L100 180 L20 100 Z" stroke-width="2" fill="none"/>
-  <circle id="core" cx="100" cy="100" r="25" stroke-width="2" fill="none"/>
+<svg id="rune" width="120" height="120" viewBox="0 0 300 300">
+  <circle id="o1" cx="150" cy="150" r="140" stroke-width="2" fill="none"/>
+  <circle id="o2" cx="150" cy="150" r="120" stroke-width="2" fill="none"/>
+  <path id="star" d="M150 20 L280 215 L20 215 Z M150 280 L20 85 L280 85 Z" stroke-width="2" fill="none"/>
+  <circle id="i1" cx="150" cy="150" r="70" stroke-width="2" fill="none"/>
+  <circle id="i2" cx="150" cy="150" r="50" stroke-width="2" fill="none"/>
+  <circle id="i3" cx="150" cy="150" r="30" stroke-width="2" fill="none"/>
+  <path id="eye" d="M110 150 Q150 110 190 150 Q150 190 110 150" stroke-width="2" fill="none"/>
+  <circle id="pupil" cx="150" cy="150" r="8" fill="none"/>
+  <circle cx="200" cy="100" r="4" fill="none"/><circle cx="100" cy="200" r="4" fill="none"/>
+  <text x="145" y="160" font-size="10" fill="none">01</text>
 </svg>
 
 <script type="module">
@@ -33,13 +40,15 @@ import {Hands} from '@mediapipe/hands';
 import {Camera} from '@mediapipe/camera_utils';
 
 const video = document.getElementById('cam');
-const portal = document.getElementById('portal');
-const ring = document.getElementById('ring');
 const rune = document.getElementById('rune');
-const core = document.getElementById('core');
+const parts = rune.querySelectorAll('circle, path, text');
+const text = document.querySelectorAll('.text');
 
-let forming = 0; // 0 to 1
-let angle = 0;   // Spin
+let forming = 0;
+let angle = 0;
+
+const idleSize = 120; // Green idle
+const maxSize = 200;  // Red max
 
 const hands = new Hands({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
 hands.setOptions({maxNumHands:1, modelComplexity:0, minDetectionConfidence:0.5});
@@ -47,35 +56,30 @@ hands.setOptions({maxNumHands:1, modelComplexity:0, minDetectionConfidence:0.5})
 hands.onResults(r => {
   const handSeen = r.multiHandLandmarks.length > 0;
   
-  // 1. FORMING ANIMATION: 0 > 1
-  forming += handSeen ? 0.03 : -0.06; // Slower form, faster close
+  forming += handSeen ? 0.03 : -0.06;
   forming = Math.max(0, Math.min(1, forming));
 
-  // 2. SIZE: 0px > 350px 
-  const size = 350 * forming;
-  portal.style.width = size + 'px';
-  portal.style.height = size + 'px';
+  const size = idleSize + (maxSize - idleSize) * forming;
+  rune.style.width = size + 'px';
+  rune.style.height = size + 'px';
 
-  // 3. COLOR: Green 0% > Red 100%
+  // OUTLINE ONLY: Green > Red stroke, NO fill ever
   const g = Math.floor(255 * (1 - forming));
   const red = Math.floor(255 * forming);
   const color = `rgb(${red},${g},0)`;
   
-  [ring, rune, core].forEach(el => {
+  parts.forEach(el => {
     el.style.stroke = color;
-    el.style.fill = forming > 0.6 ? `rgba(255,0,0,${forming-0.6})` : 'none'; // Fill late
+    el.style.fill = 'none'; // LOCKED
   });
+  text.forEach(el => el.style.color = color);
 
-  // 4. GLOW: 0 > 40px red
-  portal.style.filter = `drop-shadow(0 0 ${40 * forming}px red)`;
-  portal.style.opacity = forming;
+  // GLOW ONLY, NO SOLID CENTER
+  rune.style.filter = `drop-shadow(0 0 ${6 + 18 * forming}px ${color})`;
+  rune.style.opacity = 0.8 + 0.2 * forming;
 
-  // 5. SPIN: Only when forming
-  if(forming > 0.1){
-    angle += forming * 3; // Faster spin at max
-    portal.style.animation = 'none';
-    portal.style.transform = `translate(-50%,-50%) rotate(${angle}deg)`;
-  }
+  angle += 1 + forming * 2;
+  rune.style.transform = `translate(-50%,-50%) rotate(${angle}deg)`;
 });
 
 const camera = new Camera(video, {
